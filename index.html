@@ -134,11 +134,219 @@
                 opacity: 0.85;
             }
         }
+
+        /* Stock Button */
+        .stock-btn-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-top: 14px;
+        }
+
+        .stock-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 20px;
+            font-size: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+            cursor: pointer;
+            width: auto;
+            height: auto;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+            transition: opacity 0.1s ease;
+        }
+
+        .stock-btn:active {
+            filter: brightness(1.4);
+        }
+
+        .stock-btn .stock-icon {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Stock Panel Overlay */
+        .stock-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 100;
+        }
+
+        .stock-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .stock-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1c1c1e;
+            border-radius: 16px 16px 0 0;
+            padding: 24px 20px 32px;
+            transform: translateY(100%);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 101;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .stock-overlay.open .stock-panel {
+            transform: translateY(0);
+        }
+
+        .stock-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .stock-panel-title {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .stock-panel-close {
+            background: #2c2c2e;
+            border: none;
+            color: #999;
+            font-size: 20px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            padding: 0;
+        }
+
+        .stock-panel-close:active {
+            background: #3a3a3c;
+        }
+
+        .stock-input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stock-input {
+            flex: 1;
+            background: #2c2c2e;
+            border: 1px solid #3a3a3c;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 18px;
+            padding: 12px 14px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+            text-transform: uppercase;
+            outline: none;
+        }
+
+        .stock-input::placeholder {
+            color: #666;
+            text-transform: none;
+        }
+
+        .stock-input:focus {
+            border-color: #ff9f0a;
+        }
+
+        .stock-submit {
+            background: #ff9f0a;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+            white-space: nowrap;
+            width: auto;
+            height: auto;
+        }
+
+        .stock-submit:active {
+            background: #e08f09;
+        }
+
+        .recent-tickers-label {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .recent-tickers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .ticker-chip {
+            background: #2c2c2e;
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            padding: 6px 14px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+            width: auto;
+            height: auto;
+        }
+
+        .ticker-chip:active {
+            background: #3a3a3c;
+        }
+
+        /* Loading pulse animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .display-text.loading {
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        /* Price label flash */
+        .price-label {
+            color: #ff9f0a;
+            font-size: 14px;
+            text-align: right;
+            padding: 0 10px;
+            min-height: 18px;
+            margin-top: -8px;
+            margin-bottom: 4px;
+            transition: opacity 0.3s ease;
+        }
     </style>
 </head>
 <body>
     <div class="calculator">
         <!-- Display -->
+        <div class="price-label" id="price-label"></div>
         <div class="display">
             <div class="display-text" id="display">0</div>
         </div>
@@ -173,6 +381,32 @@
             <button class="btn-dark btn-zero" data-num="0">0</button>
             <button class="btn-dark" id="btn-decimal">.</button>
             <button class="btn-orange" id="btn-equals">=</button>
+        </div>
+
+        <!-- Stock Button -->
+        <div class="stock-btn-wrapper">
+            <button class="stock-btn" id="btn-stock" onclick="openStockPanel()">
+                <span class="stock-icon">$</span>
+                <span>Stock</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Stock Panel Overlay -->
+    <div class="stock-overlay" id="stock-overlay" onclick="handleOverlayClick(event)">
+        <div class="stock-panel" id="stock-panel">
+            <div class="stock-panel-header">
+                <span class="stock-panel-title">Stock Price Lookup</span>
+                <button class="stock-panel-close" onclick="closeStockPanel()">&times;</button>
+            </div>
+            <div class="stock-input-row">
+                <input type="text" class="stock-input" id="stock-input" placeholder="Ticker symbol (e.g. MSFT)" maxlength="10" autocomplete="off" />
+                <button class="stock-submit" id="stock-submit" onclick="handleStockSubmit()">Get Price</button>
+            </div>
+            <div id="recent-tickers-section" style="display:none;">
+                <div class="recent-tickers-label">Recent</div>
+                <div class="recent-tickers" id="recent-tickers"></div>
+            </div>
         </div>
     </div>
 
@@ -383,8 +617,141 @@
             return Math.round(result * 1e10) / 1e10;
         }
 
+        // Stock Panel Logic
+        const FINNHUB_KEY = 'd66eh51r01qnh6sdmd60d66eh51r01qnh6sdmd6g';
+        const stockOverlay = document.getElementById('stock-overlay');
+        const stockInput = document.getElementById('stock-input');
+        const priceLabel = document.getElementById('price-label');
+        let stockPanelOpen = false;
+        let priceLabelTimeout = null;
+
+        function openStockPanel() {
+            stockOverlay.classList.add('open');
+            stockPanelOpen = true;
+            stockInput.value = '';
+            loadRecentTickers();
+            setTimeout(() => stockInput.focus(), 100);
+        }
+
+        function closeStockPanel() {
+            stockOverlay.classList.remove('open');
+            stockPanelOpen = false;
+        }
+
+        function handleOverlayClick(e) {
+            if (e.target === stockOverlay) {
+                closeStockPanel();
+            }
+        }
+
+        function handleStockSubmit() {
+            const symbol = stockInput.value.trim().toUpperCase();
+            if (!symbol) return;
+            fetchStockPrice(symbol);
+        }
+
+        async function fetchStockPrice(symbol) {
+            closeStockPanel();
+
+            // Show loading state
+            display.textContent = '...';
+            display.classList.add('loading');
+            display.classList.remove('shrink-1', 'shrink-2');
+
+            try {
+                const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${FINNHUB_KEY}`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('Network error');
+                const data = await res.json();
+
+                display.classList.remove('loading');
+
+                if (!data.c || data.c === 0) {
+                    // Invalid ticker
+                    display.textContent = 'Error';
+                    setTimeout(() => {
+                        currentValue = '0';
+                        updateDisplay();
+                    }, 1500);
+                    return;
+                }
+
+                const price = Math.round(data.c * 100) / 100;
+                currentValue = String(price);
+                shouldResetDisplay = true;
+                saveRecentTicker(symbol);
+                showPriceLabel(symbol, price);
+                updateDisplay();
+            } catch (err) {
+                display.classList.remove('loading');
+                display.textContent = 'Error';
+                setTimeout(() => {
+                    currentValue = '0';
+                    updateDisplay();
+                }, 1500);
+            }
+        }
+
+        function showPriceLabel(symbol, price) {
+            if (priceLabelTimeout) clearTimeout(priceLabelTimeout);
+            priceLabel.textContent = `${symbol}: $${price.toFixed(2)}`;
+            priceLabel.style.opacity = '1';
+            priceLabelTimeout = setTimeout(() => {
+                priceLabel.style.opacity = '0';
+                setTimeout(() => { priceLabel.textContent = ''; }, 300);
+            }, 1500);
+        }
+
+        function saveRecentTicker(symbol) {
+            let tickers = [];
+            try {
+                tickers = JSON.parse(localStorage.getItem('recentTickers')) || [];
+            } catch (e) {}
+            tickers = tickers.filter(t => t !== symbol);
+            tickers.unshift(symbol);
+            tickers = tickers.slice(0, 5);
+            localStorage.setItem('recentTickers', JSON.stringify(tickers));
+        }
+
+        function loadRecentTickers() {
+            const section = document.getElementById('recent-tickers-section');
+            const container = document.getElementById('recent-tickers');
+            let tickers = [];
+            try {
+                tickers = JSON.parse(localStorage.getItem('recentTickers')) || [];
+            } catch (e) {}
+
+            if (tickers.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            container.innerHTML = '';
+            tickers.forEach(t => {
+                const chip = document.createElement('button');
+                chip.className = 'ticker-chip';
+                chip.textContent = t;
+                chip.addEventListener('click', () => fetchStockPrice(t));
+                container.appendChild(chip);
+            });
+        }
+
+        stockInput.addEventListener('keydown', (e) => {
+            e.stopPropagation();
+            if (e.key === 'Enter') {
+                handleStockSubmit();
+            } else if (e.key === 'Escape') {
+                closeStockPanel();
+            }
+        });
+
         // Keyboard support
         document.addEventListener('keydown', (e) => {
+            if (stockPanelOpen) {
+                if (e.key === 'Escape') closeStockPanel();
+                return;
+            }
             if (e.key >= '0' && e.key <= '9') {
                 document.querySelector(`[data-num="${e.key}"]`).click();
             } else if (e.key === '.') {
@@ -411,6 +778,8 @@
                     currentValue = '0';
                 }
                 updateDisplay();
+            } else if (e.key === '$') {
+                openStockPanel();
             }
         });
 
