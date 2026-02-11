@@ -341,6 +341,75 @@
             margin-bottom: 4px;
             transition: opacity 0.3s ease;
         }
+        /* Error Dialog */
+        .error-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .error-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .error-dialog {
+            background: #1c1c1e;
+            border-radius: 16px;
+            padding: 28px 24px 24px;
+            max-width: 300px;
+            width: 85%;
+            text-align: center;
+        }
+
+        .error-icon {
+            font-size: 40px;
+            color: #ff9f0a;
+            margin-bottom: 12px;
+            line-height: 1;
+        }
+
+        .error-title {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .error-message {
+            color: #999;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .error-btn {
+            background: #ff9f0a;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 0;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+            width: 100%;
+            height: auto;
+        }
+
+        .error-btn:active {
+            background: #e08f09;
+        }
     </style>
 </head>
 <body>
@@ -407,6 +476,16 @@
                 <div class="recent-tickers-label">Recent</div>
                 <div class="recent-tickers" id="recent-tickers"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- Error Dialog -->
+    <div class="error-overlay" id="error-overlay" onclick="handleErrorOverlayClick(event)">
+        <div class="error-dialog">
+            <div class="error-icon">&#9888;</div>
+            <div class="error-title" id="error-title"></div>
+            <div class="error-message" id="error-message"></div>
+            <button class="error-btn" onclick="closeErrorDialog(true)">Try Again</button>
         </div>
     </div>
 
@@ -650,6 +729,32 @@
             fetchStockPrice(symbol);
         }
 
+        // Error Dialog Logic
+        const errorOverlay = document.getElementById('error-overlay');
+        const errorTitle = document.getElementById('error-title');
+        const errorMessage = document.getElementById('error-message');
+
+        function showErrorDialog(title, message) {
+            errorTitle.textContent = title;
+            errorMessage.textContent = message;
+            errorOverlay.classList.add('open');
+            // Restore display to previous state
+            updateDisplay();
+        }
+
+        function closeErrorDialog(reopenPanel) {
+            errorOverlay.classList.remove('open');
+            if (reopenPanel) {
+                openStockPanel();
+            }
+        }
+
+        function handleErrorOverlayClick(e) {
+            if (e.target === errorOverlay) {
+                closeErrorDialog(false);
+            }
+        }
+
         async function fetchStockPrice(symbol) {
             closeStockPanel();
 
@@ -661,18 +766,27 @@
             try {
                 const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${FINNHUB_KEY}`;
                 const res = await fetch(url);
-                if (!res.ok) throw new Error('Network error');
-                const data = await res.json();
 
                 display.classList.remove('loading');
 
+                if (!res.ok) {
+                    const status = res.status;
+                    if (status === 429) {
+                        showErrorDialog('Rate Limit (429)', 'Too many requests. Wait a moment and try again.');
+                    } else if (status === 401) {
+                        showErrorDialog('Unauthorized (401)', 'API key is invalid or expired.');
+                    } else if (status === 403) {
+                        showErrorDialog('Access Denied (403)', 'Access to this resource is denied.');
+                    } else {
+                        showErrorDialog(`Server Error (${status})`, `Something went wrong (HTTP ${status}). Try again later.`);
+                    }
+                    return;
+                }
+
+                const data = await res.json();
+
                 if (!data.c || data.c === 0) {
-                    // Invalid ticker
-                    display.textContent = 'Error';
-                    setTimeout(() => {
-                        currentValue = '0';
-                        updateDisplay();
-                    }, 1500);
+                    showErrorDialog('Symbol Not Found', `"${symbol}" is not a valid ticker symbol. Check the symbol and try again.`);
                     return;
                 }
 
@@ -684,11 +798,7 @@
                 updateDisplay();
             } catch (err) {
                 display.classList.remove('loading');
-                display.textContent = 'Error';
-                setTimeout(() => {
-                    currentValue = '0';
-                    updateDisplay();
-                }, 1500);
+                showErrorDialog('Network Error', 'Could not connect. Check your internet connection and try again.');
             }
         }
 
@@ -748,6 +858,11 @@
 
         // Keyboard support
         document.addEventListener('keydown', (e) => {
+            if (errorOverlay.classList.contains('open')) {
+                if (e.key === 'Escape') closeErrorDialog(false);
+                if (e.key === 'Enter') closeErrorDialog(true);
+                return;
+            }
             if (stockPanelOpen) {
                 if (e.key === 'Escape') closeStockPanel();
                 return;
